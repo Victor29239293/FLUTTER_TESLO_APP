@@ -1,8 +1,15 @@
-//! 1: State del provider
+// ! 1. DEFINIR EL ESTADO DEL FORMULARIO
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_teslo_app/features/shared/infrastructure/input/email.dart';
-import 'package:flutter_teslo_app/features/shared/infrastructure/input/password.dart';
+import 'package:flutter_teslo_app/features/shared/shared.dart';
 import 'package:formz/formz.dart';
+
+
+// ! 3. IMPLEMENTAR EL ESTADO PARA CONSUMIR EN EL FRONTEND
+final loginFormProvider =
+    StateNotifierProvider.autoDispose<LoginFormNotifier, LoginFormState>(
+      (ref) => LoginFormNotifier(),
+    );
+
 
 class LoginFormState {
   final bool isPosting;
@@ -37,15 +44,11 @@ class LoginFormState {
 
   @override
   String toString() {
-    return '''FormState {   
-      isPosting: $isPosting,
-      isFormPosted: $isFormPosted,
-      isValid: $isValid,
-      email: $email,
-      password: $password
-    }''';
+    return 'LoginFormState(isPosting: $isPosting, isFormPosted: $isFormPosted, isValid: $isValid, email: $email, password: $password)';
   }
 }
+
+// ! 2. CREAR EL ESTADO DEL FORMULARIO
 
 class LoginFormNotifier extends StateNotifier<LoginFormState> {
   LoginFormNotifier() : super(LoginFormState());
@@ -60,28 +63,26 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
 
   onPasswordChanged(String value) {
     final newPassword = Password.dirty(value);
-    state = state.copyWith(password: newPassword);
+    state = state.copyWith(
+      password: newPassword,
+      isValid: Formz.validate([newPassword, state.email]),
+    );
   }
 
-  onFormSubmit() {
+  onSubmit() {
     _touchEveryField();
-    if (state.isValid) return;
+    if (!state.isValid) return;
     print(state);
   }
 
   _touchEveryField() {
-    final newEmail = Email.dirty(state.email.value);
-    final newPassword = Password.dirty(state.password.value);
+    final email = Email.dirty(state.email.value);
+    final password = Password.dirty(state.password.value);
     state = state.copyWith(
       isFormPosted: true,
-      email: newEmail,
-      password: newPassword,
-      isValid: Formz.validate([newEmail, newPassword]),
+      email: email,
+      password: password,
+      isValid: Formz.validate([email, password]),
     );
   }
 }
-
-final loginFormProvider =
-    StateNotifierProvider.autoDispose<LoginFormNotifier, LoginFormState>(
-      (ref) => LoginFormNotifier(),
-    );
