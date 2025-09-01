@@ -14,7 +14,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier({required this.authRepository}) : super(AuthState());
 
-  void loginUser(String email, String password) async {
+  Future<void> loginUser(String email, String password) async {
     await Future.delayed(const Duration(seconds: 2));
 
     try {
@@ -32,7 +32,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   void checkAuthStatus() async {}
 
   void _setLogoutUser(User user) async {
-    // TODO: 
+    // TODO:
     state = state.copyWith(authStatus: AuthStatus.authenticated, user: user);
   }
 

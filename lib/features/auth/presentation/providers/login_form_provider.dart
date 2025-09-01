@@ -2,14 +2,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_teslo_app/features/shared/shared.dart';
 import 'package:formz/formz.dart';
-
+import 'auth_provider.dart';
 
 // ! 3. IMPLEMENTAR EL ESTADO PARA CONSUMIR EN EL FRONTEND
 final loginFormProvider =
-    StateNotifierProvider.autoDispose<LoginFormNotifier, LoginFormState>(
-      (ref) => LoginFormNotifier(),
-    );
-
+    StateNotifierProvider.autoDispose<LoginFormNotifier, LoginFormState>((ref) {
+      final loginUserCallBack = ref.watch(authProvider.notifier).loginUser;
+      return LoginFormNotifier(loginUserCallBack: loginUserCallBack);
+    });
 
 class LoginFormState {
   final bool isPosting;
@@ -51,7 +51,9 @@ class LoginFormState {
 // ! 2. CREAR EL ESTADO DEL FORMULARIO
 
 class LoginFormNotifier extends StateNotifier<LoginFormState> {
-  LoginFormNotifier() : super(LoginFormState());
+  final Function(String, String) loginUserCallBack;
+  LoginFormNotifier({required this.loginUserCallBack})
+    : super(LoginFormState());
 
   onEmailChanged(String value) {
     final newEmail = Email.dirty(value);
@@ -69,10 +71,10 @@ class LoginFormNotifier extends StateNotifier<LoginFormState> {
     );
   }
 
-  onSubmit() {
+  onSubmit()  async{
     _touchEveryField();
     if (!state.isValid) return;
-    print(state);
+    await loginUserCallBack(state.email.value, state.password.value);
   }
 
   _touchEveryField() {
