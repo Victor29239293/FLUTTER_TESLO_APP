@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_teslo_app/config/constants/environment.dart';
 import 'package:flutter_teslo_app/features/auth/infrastructure/infrastructure.dart';
-import 'package:flutter_teslo_app/features/auth/infrastructure/mappers/user_mappers.dart';
-import 'package:flutter_teslo_app/features/auth/infrastructure/models/login_response.dart';
 import '../../domain/domain.dart';
 
 class AuthDatasourceImpl implements AuthDataSource {
@@ -15,9 +13,17 @@ class AuthDatasourceImpl implements AuthDataSource {
         data: {'email': email, 'password': password},
       );
       final loginResponse = LoginResponse.fromJson(response.data);
-      return UserMapper.toEntity(loginResponse);
-    } catch (e) {
-      throw WrongCredentials();
+
+      final user = UserMapper.toEntity(loginResponse);
+      return user;
+    } on DioException catch (e) {
+       if (e.response?.statusCode == 401) {
+        throw WrongCredentials();
+      } else if (e.type == DioExceptionType.connectionError) {
+        throw CustomError('Error de conexion', 503);
+      } else {
+        throw CustomError('Error inesperado', e.response?.statusCode ?? 500);
+      }
     }
   }
 
